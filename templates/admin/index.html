@@ -1,0 +1,23 @@
+{% extends "admin/index.html" %}
+{% block content %}
+<div class="bcu-stats">
+  <div class="bcu-stat"><span>{% if scoped %}{{ district_name }}: societies{% else %}Societies{% endif %}</span><strong>{{ totals.societies }}</strong></div>
+  <div class="bcu-stat"><span>Active members</span><strong>{{ totals.members }}</strong></div>
+  <div class="bcu-stat"><span>Current leaders</span><strong>{{ totals.leaders }}</strong></div>
+  <div class="bcu-stat{% if totals.balance > 0 %} warn{% endif %}"><span>Levy balance {{ levy_year }}</span><strong>${{ totals.balance|floatformat:"0g" }}</strong></div>
+  <div class="bcu-stat{% if no_consent %} warn{% endif %}"><span>Active members without recorded consent</span><strong>{{ no_consent }}</strong></div>
+</div>
+
+<div class="module bcu-wide"><table>
+  <caption>{% if scoped %}Your district{% else %}Districts{% endif %} at a glance, levies for {{ levy_year }}</caption>
+  <thead><tr><th>District</th><th class="n">Circuits</th><th class="n">Societies</th><th class="n">Active members</th><th class="n">Leaders</th><th class="n">Levy due</th><th class="n">Paid</th><th class="n">Balance</th></tr></thead>
+  <tbody>
+  {% for r in rows %}<tr><th scope="row">{{ r.name }}</th><td class="n">{{ r.circuits }}</td><td class="n">{{ r.societies }}</td><td class="n">{{ r.members }}</td><td class="n">{{ r.leaders }}</td>
+    <td class="n">{{ r.assessed|floatformat:"2g" }}</td><td class="n">{{ r.paid|floatformat:"2g" }}</td><td class="n {% if r.balance > 0 %}owing{% endif %}">{{ r.balance|floatformat:"2g" }}</td></tr>
+  {% empty %}<tr><td colspan="8">No districts to show. Ask a national officer to set up your access.</td></tr>{% endfor %}
+  </tbody>
+  {% if rows|length > 1 %}<tfoot><tr><th>Total</th><td class="n">{{ totals.circuits }}</td><td class="n">{{ totals.societies }}</td><td class="n">{{ totals.members }}</td><td class="n">{{ totals.leaders }}</td>
+    <td class="n">{{ totals.assessed|floatformat:"2g" }}</td><td class="n">{{ totals.paid|floatformat:"2g" }}</td><td class="n">{{ totals.balance|floatformat:"2g" }}</td></tr></tfoot>{% endif %}
+</table></div>
+{{ block.super }}
+{% endblock %}
