@@ -161,6 +161,7 @@ class Profile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="profile")
     role = models.CharField(max_length=10, choices=ROLES, default=DISTRICT)
     district = models.ForeignKey(District, null=True, blank=True, on_delete=models.PROTECT, related_name="officer_logins")
+    must_change_password = models.BooleanField(default=True, help_text="The officer must choose their own password at first login")
 
     def clean(self):
         if self.role == self.DISTRICT and not self.district_id:

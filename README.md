@@ -54,10 +54,16 @@ Open http://localhost:8000/ and log in. `python manage.py test` runs the tests.
 
 ## Deploy (Vercel + Neon)
 
-1. Create a **new** Neon database for this system (do not reuse the shop's).
-2. Set: `DATABASE_URL`, `DJANGO_SECRET_KEY` (long and random), `DJANGO_DEBUG=0`, `DJANGO_ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`.
-3. Run `python manage.py migrate` and `createsuperuser` once against that database.
-4. Run `DJANGO_DEBUG=0 python manage.py collectstatic` and commit `staticfiles/` (as the shop does) before deploying.
+1. Create a **new** Neon database for this system (do not reuse the shop's): Neon > your project > Databases > New database, then copy its connection string.
+2. In Vercel, import `SlyJeremiah/CONN.BCU` and add these environment variables (see `.env.example`):
+   `DATABASE_URL` (the new Neon string), `DJANGO_SECRET_KEY` (long, random), `DJANGO_DEBUG=0`, `DJANGO_ALLOWED_HOSTS=.vercel.app`, `CSRF_TRUSTED_ORIGINS=https://*.vercel.app`.
+3. Once, against that database: `python manage.py migrate`, then `python manage.py create_national_officers` (prints one-time starting passwords).
+4. After changing any CSS or JS: `DJANGO_DEBUG=0 python manage.py collectstatic --noinput` and commit `staticfiles/`.
+
+## Logins
+
+`python manage.py create_national_officers` creates **Connexional Minister In Charge**, **Connexional Treasurer** and **Connexional Secretary** as national officers with starting passwords that must be changed at first login.
+National officers then add district admins and other Connexional executives in **Users** (Access section), with no code.
 
 ## Next steps
 

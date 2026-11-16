@@ -12,7 +12,7 @@ from .models import Circuit, District, Member, OfficeBearer, Profile, Society
 
 def make_user(name, role, district=None):
     u = User.objects.create_user(name, f"{name}@example.org", "pw-long-enough-12")
-    Profile.objects.create(user=u, role=role, district=district)
+    Profile.objects.create(user=u, role=role, district=district, must_change_password=False)
     return u
 
 
@@ -168,3 +168,57 @@ class ModelRuleTests(Base):
         self.assertEqual(r.status_code, 302)
         self.assertEqual(LevyPayment.objects.get().received_by, self.national)
         self.assertContains(self.client.get(reverse("admin:index")), "690.00")      # 840 total minus 150 paid
+
+
+class LoginsTests(Base):
+    def test_command_creates_three_connexional_officers_once(self):
+        from io import StringIO
+        from django.core.management import call_command
+        out = StringIO()
+        call_command("create_national_officers", stdout=out)
+        users = User.objects.filter(username__startswith="conn.")
+        self.assertEqual(sorted(users.values_list("username", flat=True)), ["conn.minister", "conn.secretary", "conn.treasurer"])
+        for u in users:
+            self.assertEqual(u.profile.role, Profile.NATIONAL)
+            self.assertTrue(u.profile.must_change_password)
+            self.assertTrue(u.has_usable_password())
+        self.assertIn("starting password", out.getvalue())
+        out2 = StringIO()
+        call_command("create_national_officers", stdout=out2)
+        self.assertIn("already exists", out2.getvalue())
+        self.assertNotIn("starting password", out2.getvalue())
+
+    def test_first_login_forces_password_change_then_releases(self):
+        u = User.objects.create_user("newbie", password="starting-pass-123")
+        Profile.objects.create(user=u, role=Profile.DISTRICT, district=self.east)      # must_change_password defaults to True
+        self.client.force_login(u)
+        r = self.client.get(reverse("admin:registry_member_changelist"))
+        self.assertRedirects(r, reverse("admin:password_change"), fetch_redirect_response=False)
+        self.assertEqual(self.client.get(reverse("admin:password_change")).status_code, 200)
+        r = self.client.post(reverse("admin:password_change"),
+                             {"old_password": "starting-pass-123", "new_password1": "My-own-password-77", "new_password2": "My-own-password-77"})
+        self.assertEqual(r.status_code, 302)
+        u.profile.refresh_from_db()
+        self.assertFalse(u.profile.must_change_password)
+        self.assertEqual(self.client.get(reverse("admin:registry_member_changelist")).status_code, 200)
+
+    def test_national_officer_can_add_a_district_admin(self):
+        self.client.force_login(self.national)
+        west = District.objects.get(name="Harare West")
+        data = {"username": "west.admin", "password1": "Starter-pass-8899", "password2": "Starter-pass-8899",
+                "profile-TOTAL_FORMS": "1", "profile-INITIAL_FORMS": "0", "profile-MIN_NUM_FORMS": "0", "profile-MAX_NUM_FORMS": "1",
+                "profile-0-role": "district", "profile-0-district": west.pk, "profile-0-must_change_password": "on"}
+        r = self.client.post(reverse("admin:auth_user_add"), data)
+        self.assertEqual(r.status_code, 302, getattr(r, "context", None) and r.context.get("adminform") and r.context["adminform"].form.errors)
+        u = User.objects.get(username="west.admin")
+        self.assertTrue(u.is_staff)
+        self.assertEqual(u.profile.district, west)
+        self.assertEqual(list(u.groups.values_list("name", flat=True)), ["District officers"])
+        self.assertFalse(u.is_superuser)
+
+    def test_national_officer_cannot_make_superusers_or_see_them(self):
+        root = User.objects.create_superuser("root", "r@example.org", "x-long-root-pass-1")
+        self.client.force_login(self.national)
+        r = self.client.get(reverse("admin:auth_user_changelist"))
+        self.assertNotContains(r, "root")
+        self.assertEqual(self.client.get(reverse("admin:auth_user_change", args=[root.pk])).status_code, 302)

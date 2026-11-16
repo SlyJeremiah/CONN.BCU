@@ -10,6 +10,13 @@ class BCUAdminSite(admin.AdminSite):
     site_title = "BCU Database"
     index_title = "Dashboard"
 
+    def password_change(self, request, extra_context=None):
+        response = super().password_change(request, extra_context)
+        if request.method == "POST" and response.status_code == 302:   # a successful change clears the first-login requirement
+            from .models import Profile
+            Profile.objects.filter(user=request.user).update(must_change_password=False)
+        return response
+
     def index(self, request, extra_context=None):
         from finance.models import LevyAssessment
         from .models import District, Member, OfficeBearer

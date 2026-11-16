@@ -1,0 +1,31 @@
+:root,html[data-theme="light"]{
+  --primary:#1e1e4b; --secondary:#d40000; --accent:#ffd60a;
+  --header-bg:#1e1e4b; --header-color:#fff; --header-branding-color:#fff; --header-link-color:#fff;
+  --breadcrumbs-bg:#d40000; --breadcrumbs-fg:#fff; --breadcrumbs-link-fg:#ffe98a;
+  --link-fg:#0b6b1e; --link-hover-color:#d40000; --link-selected-fg:#d40000;
+  --button-bg:#0b6b1e; --button-hover-bg:#074a14; --default-button-bg:#d40000; --default-button-hover-bg:#a30000;
+  --object-tools-bg:#1e1e4b; --object-tools-hover-bg:#d40000; --module-header-bg:#1e1e4b;
+}
+#header{border-bottom:4px solid #ffd60a}
+.bcu-brand{display:flex!important;align-items:center;gap:10px;text-decoration:none}
+.bcu-brand img{width:40px;height:40px;border-radius:50%;background:#fff}
+.bcu-brand span{display:block;font-weight:700}.bcu-brand small{display:block;font-weight:400;font-size:.7rem;opacity:.8}
+div.breadcrumbs{background:var(--breadcrumbs-bg)}
+.module caption,.module h2{background:#1e1e4b;color:#fff}
+.bcu-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:0 0 20px}
+.bcu-stat{background:var(--body-bg,#fff);border:1px solid var(--hairline-color,#ddd);border-left:6px solid #0b6b1e;border-radius:8px;padding:12px 14px}
+.bcu-stat.warn{border-left-color:#d40000}
+.bcu-stat span{display:block;font-size:.78rem;color:var(--body-quiet-color,#666)}
+.bcu-stat strong{font-size:1.6rem;color:var(--body-fg)}
+.bcu-wide{margin-bottom:20px}.bcu-wide table{width:100%}
+.bcu-wide .n{text-align:right;font-variant-numeric:tabular-nums}
+.bcu-wide .owing{color:#d40000;font-weight:700}
+.bcu-wide tfoot th,.bcu-wide tfoot td{font-weight:700;border-top:2px solid var(--hairline-color,#ccc)}
+.bcu-thumb{width:44px;height:44px;object-fit:cover;border-radius:6px}
+/* dashboard: use the full width, keep headings on one line */
+body.dashboard #content-related{display:none}
+body.dashboard .colMS{margin-right:0}
+body.dashboard #content{width:auto}
+.bcu-wide{overflow-x:auto}
+.bcu-wide th,.bcu-wide td{white-space:nowrap}
+.bcu-wide thead th.n{text-align:right}
