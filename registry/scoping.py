@@ -20,15 +20,20 @@ class DistrictScoped:
             return qs.none()
         return self.scope(qs, d)
 
+    @staticmethod
+    def _match(path, d):
+        """A lookup ending in 'pk' compares ids, so it needs the district's id; other paths take the District itself."""
+        return d.pk if path == "pk" else d
+
     def scope(self, qs, d):
-        return qs.filter(**{self.district_lookup: d})
+        return qs.filter(**{self.district_lookup: self._match(self.district_lookup, d)})
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         d = district_of(request.user)
         path = self.fk_limits.get(db_field.name)
         if d is not None and path:
             model = db_field.remote_field.model
-            kwargs["queryset"] = model._default_manager.none() if d is NONE else model._default_manager.filter(**{path: d})
+            kwargs["queryset"] = model._default_manager.none() if d is NONE else model._default_manager.filter(**{path: self._match(path, d)})
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def obj_district(self, obj):

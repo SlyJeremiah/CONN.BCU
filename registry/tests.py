@@ -81,6 +81,26 @@ class ScopingTests(Base):
         self.assertContains(r, "Harare East")
         self.assertNotContains(r, "Kadoma")
 
+    def test_district_officer_pages_all_open(self):
+        """Regression: the Districts list and every add form must open for a district officer (this crashed on Postgres)."""
+        self.client.force_login(self.east_officer)
+        r = self.client.get(reverse("admin:registry_district_changelist"))
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, "Harare East")
+        self.assertNotContains(r, "Kadoma")
+        for name in ["admin:registry_circuit_add", "admin:registry_society_add", "admin:registry_member_add", "admin:registry_officebearer_add"]:
+            self.assertEqual(self.client.get(reverse(name)).status_code, 200, name)
+
+    def test_district_officer_forms_only_offer_own_district(self):
+        self.client.force_login(self.east_officer)
+        r = self.client.get(reverse("admin:registry_circuit_add"))
+        districts = [str(d) for d in r.context["adminform"].form.fields["district"].queryset]
+        self.assertEqual(districts, ["Harare East"])
+        r = self.client.get(reverse("admin:registry_officebearer_add"))
+        self.assertEqual([str(d) for d in r.context["adminform"].form.fields["district"].queryset], ["Harare East"])
+        levels = [v for v, _ in r.context["adminform"].form.fields["level"].choices]
+        self.assertNotIn("national", levels)
+
     def test_district_officer_cannot_add_districts_or_delete_members(self):
         self.client.force_login(self.east_officer)
         self.assertEqual(self.client.get(reverse("admin:registry_district_add")).status_code, 403)
